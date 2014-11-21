@@ -12,11 +12,18 @@ function κ(x){
   };
 }
 function η(f){
-  return function(x){ return f(x); };
+  var ex = function(x){ return f(x); };
+  ex.f_name = 'eta: ' + f.f_name;
+  return ex;
 }
-function annotate(τ, f){
-  f.τ = τ;
-  return f;
+function after(f){
+  return function(k){
+    var continuation = function(x){
+      return f(k(x));
+    };
+    continuation.τ = f.τ;
+    return continuation;
+  };
 }
 function flipCurry(f){
   return function(x){
@@ -25,9 +32,13 @@ function flipCurry(f){
     };
   };
 }
+function annotate(τ, f){
+  f.τ = τ;
+  return f;
+}
 function withType(τ, f){
-  var def = flipCurry(f);
-  return annotate(τ, def);
+  var def = annotate(τ, flipCurry(f));
+  return after(def);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -35,22 +46,19 @@ function withType(τ, f){
 ///////////////////////////////////////////////////////////////////////////////
 function λ(τ){
   var fix = function(f){ return _λ(τ, f, f); };
-
   return _λ(τ, id, fix);
 }
 function _λ(τ, k, f){
-  var compose = function(f, g){
+  var fix = function(g){
     return function(x){
-      var composite = function(y){
-        return g(x)(f(y));
-      };
-      return _λ(g.τ(x), composite, composite);
+      var g2 = g(x);
+      return _λ(g.τ(x), g2, g2);
     };
   };
 
   var delegate = η(f);
   for(var name in τ){
-    delegate[name] = compose(k, τ[name]);
+    delegate[name] = fix(τ[name](k));
   }
   return delegate;
 }
@@ -71,7 +79,23 @@ var τ = {
 //-----------------------------------------------------------------------------
 // Any Type
 //-----------------------------------------------------------------------------
+var andThen = function(τ){
+  var continuation = function(k){
+    return function(f){
+      return function(x){
+        console.log(x);
+        console.log(k instanceof Function);
+        console.log(f instanceof Function);
+        return f(k(x));
+      };
+    };
+  };
+  continuation.τ = κ(τ);
+  return continuation;
+};
 //methods
+τ.any.andThen              = andThen;
+
 τ.any.toString             = withType(κ(τ.string), prim.any.toString             );
 τ.any.toLocaleString       = withType(κ(τ.string), prim.any.toLocaleString       );
 //operators
@@ -107,6 +131,7 @@ var τ = {
 τ.array.sort                 = withType(κ(τ.array),  prim.array.sort             );
 τ.array.splice               = withType(κ(τ.array),  prim.array.splice           );
 τ.array.unshift              = withType(κ(τ.array),  prim.array.unshift          );
+τ.array.andThen              = τ.any.andThen;
 τ.array.toLocaleString       = τ.any.toLocaleString;
 τ.array.toString             = τ.any.toString;
 //operators
@@ -122,6 +147,7 @@ var τ = {
 // Boolean
 //-----------------------------------------------------------------------------
 //methods
+τ.bool.andThen              = τ.any.andThen;
 τ.bool.toLocaleString       = τ.any.toLocaleString;
 τ.bool.toString             = τ.any.toString;
 //operators
@@ -140,6 +166,7 @@ var τ = {
 // Number
 //-----------------------------------------------------------------------------
 //methods
+τ.number.andThen              = τ.any.andThen;
 τ.number.toExponential        = withType(κ(τ.number), prim.number.toExponential  );
 τ.number.toFixed              = withType(κ(τ.number), prim.number.toFixed        );
 τ.number.toPrecision          = withType(κ(τ.number), prim.number.toPrecision    );
@@ -163,6 +190,7 @@ var τ = {
 // String
 //-----------------------------------------------------------------------------
 //methods
+τ.string.andThen              = τ.any.andThen;
 τ.string.charAt               = withType(κ(τ.string),  prim.string.charAt            );
 τ.string.charCodeAt           = withType(κ(τ.number),  prim.string.charCodeAt        );
 τ.string.concat               = withType(κ(τ.string),  prim.string.concat            );

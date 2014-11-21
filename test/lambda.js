@@ -29,5 +29,10 @@ exports.lambda = {
   'Arithmetic 2': function(test){
     test.strictEqual(arithmetic_2(3), 9);
     test.done();
+  },
+  'Composition': function(test){
+    var f = arithmetic_1.andThen(τ.number)(arithmetic_2);
+    test.strictEqual(f(3), 45);
+    test.done();
   }
 };
