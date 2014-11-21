@@ -6,13 +6,17 @@ var prim = require('./prim');
 function id(x){
   return x;
 }
+function κ(x){
+  return function(){
+    return x;
+  };
+}
 function η(f){
   return function(x){ return f(x); };
 }
 function annotate(τ, f){
-  var def = flipCurry(f);
-  def.τ = τ;
-  return def;
+  f.τ = τ;
+  return f;
 }
 function flipCurry(f){
   return function(x){
@@ -20,6 +24,10 @@ function flipCurry(f){
       return f(y,x);
     };
   };
+}
+function withType(τ, f){
+  var def = flipCurry(f);
+  return annotate(τ, def);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -36,7 +44,7 @@ function _λ(τ, k, f){
       var composite = function(y){
         return g(x)(f(y));
       };
-      return _λ(g.τ, composite, composite);
+      return _λ(g.τ(x), composite, composite);
     };
   };
 
@@ -64,41 +72,41 @@ var τ = {
 // Any Type
 //-----------------------------------------------------------------------------
 //methods
-τ.any.toString             = annotate(τ.string, prim.any.toString             );
-τ.any.toLocaleString       = annotate(τ.string, prim.any.toLocaleString       );
+τ.any.toString             = withType(κ(τ.string), prim.any.toString             );
+τ.any.toLocaleString       = withType(κ(τ.string), prim.any.toLocaleString       );
 //operators
-τ.any.equalTo              = annotate(τ.bool,   prim.any.equalTo              );
-τ.any.notEqualTo           = annotate(τ.bool,   prim.any.notEqualTo           );
-τ.any.lessThan             = annotate(τ.bool,   prim.any.lessThan             );
-τ.any.greaterThan          = annotate(τ.bool,   prim.any.greaterThan          );
-τ.any.greaterThanOrEqualTo = annotate(τ.bool,   prim.any.greaterThanOrEqualTo );
-τ.any.lessThanOrEqualTo    = annotate(τ.bool,   prim.any.lessThanOrEqualTo    );
+τ.any.equalTo              = withType(κ(τ.bool),   prim.any.equalTo              );
+τ.any.notEqualTo           = withType(κ(τ.bool),   prim.any.notEqualTo           );
+τ.any.lessThan             = withType(κ(τ.bool),   prim.any.lessThan             );
+τ.any.greaterThan          = withType(κ(τ.bool),   prim.any.greaterThan          );
+τ.any.greaterThanOrEqualTo = withType(κ(τ.bool),   prim.any.greaterThanOrEqualTo );
+τ.any.lessThanOrEqualTo    = withType(κ(τ.bool),   prim.any.lessThanOrEqualTo    );
 
 
 //-----------------------------------------------------------------------------
 // Array
 //-----------------------------------------------------------------------------
 //methods
-τ.array.concat               = annotate(τ.array,  prim.array.concat           );
-τ.array.every                = annotate(τ.bool,   prim.array.every            );
-τ.array.filter               = annotate(τ.array,  prim.array.filter           );
-τ.array.forEach              = annotate(τ.any,    prim.array.forEach          );
-τ.array.indexOf              = annotate(τ.number, prim.array.indexOf          );
-τ.array.join                 = annotate(τ.string, prim.array.join             );
-τ.array.lastIndexOf          = annotate(τ.number, prim.array.lastIndexOf      );
-τ.array.$length              = annotate(τ.number, prim.array.$length          );
-τ.array.map                  = annotate(τ.array,  prim.array.map              );
-τ.array.pop                  = annotate(τ.any,    prim.array.pop              );
-τ.array.push                 = annotate(τ.array,  prim.array.push             );
-τ.array.reduce               = annotate(τ.any,    prim.array.reduce           );
-τ.array.reduceRight          = annotate(τ.any,    prim.array.reduceRight      );
-τ.array.reverse              = annotate(τ.array,  prim.array.reverse          );
-τ.array.shift                = annotate(τ.any,    prim.array.shift            );
-τ.array.slice                = annotate(τ.array,  prim.array.slice            );
-τ.array.some                 = annotate(τ.bool,   prim.array.some             );
-τ.array.sort                 = annotate(τ.array,  prim.array.sort             );
-τ.array.splice               = annotate(τ.array,  prim.array.splice           );
-τ.array.unshift              = annotate(τ.array,  prim.array.unshift          );
+τ.array.concat               = withType(κ(τ.array),  prim.array.concat           );
+τ.array.every                = withType(κ(τ.bool),   prim.array.every            );
+τ.array.filter               = withType(κ(τ.array),  prim.array.filter           );
+τ.array.forEach              = withType(κ(τ.any),    prim.array.forEach          );
+τ.array.indexOf              = withType(κ(τ.number), prim.array.indexOf          );
+τ.array.join                 = withType(κ(τ.string), prim.array.join             );
+τ.array.lastIndexOf          = withType(κ(τ.number), prim.array.lastIndexOf      );
+τ.array.$length              = withType(κ(τ.number), prim.array.$length          );
+τ.array.map                  = withType(κ(τ.array),  prim.array.map              );
+τ.array.pop                  = withType(κ(τ.any),    prim.array.pop              );
+τ.array.push                 = withType(κ(τ.array),  prim.array.push             );
+τ.array.reduce               = withType(κ(τ.any),    prim.array.reduce           );
+τ.array.reduceRight          = withType(κ(τ.any),    prim.array.reduceRight      );
+τ.array.reverse              = withType(κ(τ.array),  prim.array.reverse          );
+τ.array.shift                = withType(κ(τ.any),    prim.array.shift            );
+τ.array.slice                = withType(κ(τ.array),  prim.array.slice            );
+τ.array.some                 = withType(κ(τ.bool),   prim.array.some             );
+τ.array.sort                 = withType(κ(τ.array),  prim.array.sort             );
+τ.array.splice               = withType(κ(τ.array),  prim.array.splice           );
+τ.array.unshift              = withType(κ(τ.array),  prim.array.unshift          );
 τ.array.toLocaleString       = τ.any.toLocaleString;
 τ.array.toString             = τ.any.toString;
 //operators
@@ -117,9 +125,9 @@ var τ = {
 τ.bool.toLocaleString       = τ.any.toLocaleString;
 τ.bool.toString             = τ.any.toString;
 //operators
-τ.bool.not                  = annotate(τ.bool, prim.bool.not );
-τ.bool.or                   = annotate(τ.bool, prim.bool.or  );
-τ.bool.and                  = annotate(τ.bool, prim.bool.and );
+τ.bool.not                  = withType(κ(τ.bool), prim.bool.not );
+τ.bool.or                   = withType(κ(τ.bool), prim.bool.or  );
+τ.bool.and                  = withType(κ(τ.bool), prim.bool.and );
 τ.bool.equalTo              = τ.any.equalTo;
 τ.bool.notEqualTo           = τ.any.notEqualTo;
 τ.bool.lessThan             = τ.any.lessThan;
@@ -132,17 +140,17 @@ var τ = {
 // Number
 //-----------------------------------------------------------------------------
 //methods
-τ.number.toExponential        = annotate(τ.number, prim.number.toExponential  );
-τ.number.toFixed              = annotate(τ.number, prim.number.toFixed        );
-τ.number.toPrecision          = annotate(τ.number, prim.number.toPrecision    );
+τ.number.toExponential        = withType(κ(τ.number), prim.number.toExponential  );
+τ.number.toFixed              = withType(κ(τ.number), prim.number.toFixed        );
+τ.number.toPrecision          = withType(κ(τ.number), prim.number.toPrecision    );
 τ.number.toLocaleString       = τ.any.toLocaleString;
 τ.number.toString             = τ.any.toString;
 //operators
-τ.number.plus                 = annotate(τ.number, prim.number.plus  );
-τ.number.minus                = annotate(τ.number, prim.number.minus );
-τ.number.times                = annotate(τ.number, prim.number.times );
-τ.number.div                  = annotate(τ.number, prim.number.div   );
-τ.number.mod                  = annotate(τ.number, prim.number.mod   );
+τ.number.plus                 = withType(κ(τ.number), prim.number.plus  );
+τ.number.minus                = withType(κ(τ.number), prim.number.minus );
+τ.number.times                = withType(κ(τ.number), prim.number.times );
+τ.number.div                  = withType(κ(τ.number), prim.number.div   );
+τ.number.mod                  = withType(κ(τ.number), prim.number.mod   );
 τ.number.equalTo              = τ.any.equalTo;
 τ.number.notEqualTo           = τ.any.notEqualTo;
 τ.number.lessThan             = τ.any.lessThan;
@@ -155,25 +163,25 @@ var τ = {
 // String
 //-----------------------------------------------------------------------------
 //methods
-τ.string.charAt               = annotate(τ.string,  prim.string.charAt            );
-τ.string.charCodeAt           = annotate(τ.number,  prim.string.charCodeAt        );
-τ.string.concat               = annotate(τ.string,  prim.string.concat            );
-τ.string.indexOf              = annotate(τ.number,  prim.string.indexOf           );
-τ.string.lastIndexOf          = annotate(τ.number,  prim.string.lastIndexOf       );
-τ.string.$length              = annotate(τ.number,  prim.string.$length           );
-τ.string.localeCompare        = annotate(τ.number,  prim.string.localeCompare     );
-τ.string.match                = annotate(τ.array,   prim.string.match             );
-τ.string.replace              = annotate(τ.string,  prim.string.replace           );
-τ.string.search               = annotate(τ.number,  prim.string.search            );
-τ.string.slice                = annotate(τ.string,  prim.string.slice             );
-τ.string.split                = annotate(τ.array,   prim.string.split             );
-τ.string.substr               = annotate(τ.string,  prim.string.substr            );
-τ.string.substring            = annotate(τ.string,  prim.string.substring         );
-τ.string.toLocaleLowerCase    = annotate(τ.string,  prim.string.toLocaleLowerCase );
-τ.string.toLocaleUpperCase    = annotate(τ.string,  prim.string.toLocaleUpperCase );
-τ.string.toLowerCase          = annotate(τ.string,  prim.string.toLowerCase       );
-τ.string.toUpperCase          = annotate(τ.string,  prim.string.toUpperCase       );
-τ.string.trim                 = annotate(τ.string,  prim.string.trim              );
+τ.string.charAt               = withType(κ(τ.string),  prim.string.charAt            );
+τ.string.charCodeAt           = withType(κ(τ.number),  prim.string.charCodeAt        );
+τ.string.concat               = withType(κ(τ.string),  prim.string.concat            );
+τ.string.indexOf              = withType(κ(τ.number),  prim.string.indexOf           );
+τ.string.lastIndexOf          = withType(κ(τ.number),  prim.string.lastIndexOf       );
+τ.string.$length              = withType(κ(τ.number),  prim.string.$length           );
+τ.string.localeCompare        = withType(κ(τ.number),  prim.string.localeCompare     );
+τ.string.match                = withType(κ(τ.array),   prim.string.match             );
+τ.string.replace              = withType(κ(τ.string),  prim.string.replace           );
+τ.string.search               = withType(κ(τ.number),  prim.string.search            );
+τ.string.slice                = withType(κ(τ.string),  prim.string.slice             );
+τ.string.split                = withType(κ(τ.array),   prim.string.split             );
+τ.string.substr               = withType(κ(τ.string),  prim.string.substr            );
+τ.string.substring            = withType(κ(τ.string),  prim.string.substring         );
+τ.string.toLocaleLowerCase    = withType(κ(τ.string),  prim.string.toLocaleLowerCase );
+τ.string.toLocaleUpperCase    = withType(κ(τ.string),  prim.string.toLocaleUpperCase );
+τ.string.toLowerCase          = withType(κ(τ.string),  prim.string.toLowerCase       );
+τ.string.toUpperCase          = withType(κ(τ.string),  prim.string.toUpperCase       );
+τ.string.trim                 = withType(κ(τ.string),  prim.string.trim              );
 τ.string.toLocaleString       = τ.any.toLocaleString;
 τ.string.toString             = τ.any.toString;
 //operators
@@ -183,6 +191,17 @@ var τ = {
 τ.string.greaterThan          = τ.any.greaterThan;
 τ.string.greaterThanOrEqualTo = τ.any.greaterThanOrEqualTo;
 τ.string.lessThanOrEqualTo    = τ.any.lessThanOrEqualTo;
+
+
+///////////////////////////////////////////////////////////////////////////////
+// EXPORTS
+///////////////////////////////////////////////////////////////////////////////
+if (typeof module != 'undefined'){
+  module.exports = {
+    λ: λ,
+    τ: τ
+  };
+}
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -199,14 +218,3 @@ var g = λ(τ.number)
 
 console.log(f(1));
 console.log(g(10));
-
-
-///////////////////////////////////////////////////////////////////////////////
-// EXPORTS
-///////////////////////////////////////////////////////////////////////////////
-if (typeof module != 'undefined'){
-  module.exports = {
-    λ: λ,
-    τ: τ
-  };
-}
