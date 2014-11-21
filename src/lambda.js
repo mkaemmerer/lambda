@@ -1,15 +1,26 @@
+var prim = require('./prim');
+
 ///////////////////////////////////////////////////////////////////////////////
 // UTILITY
 ///////////////////////////////////////////////////////////////////////////////
+function id(x){
+  return x;
+}
 function η(f){
   return function(x){ return f(x); };
 }
 function annotate(τ, f){
-  var def = η(f);
-  def.τ   = τ;
+  var def = flipCurry(f);
+  def.τ = τ;
   return def;
 }
-function id(x){ return x; }
+function flipCurry(f){
+  return function(x){
+    return function(y){
+      return f(y,x);
+    };
+  };
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 // MAGIC
@@ -49,98 +60,153 @@ var τ = {
 // FUNCTION DEFINITIONS
 ///////////////////////////////////////////////////////////////////////////////
 
-//Any type
-τ.any.toString             = annotate(τ.string, function() { return function(x){ return x.toString(); };          });
-τ.any.toLocaleString       = annotate(τ.string, function() { return function(x){ return x.toLocaleString(); };    });
+//-----------------------------------------------------------------------------
+// Any Type
+//-----------------------------------------------------------------------------
+//methods
+τ.any.toString             = annotate(τ.string, prim.any.toString             );
+τ.any.toLocaleString       = annotate(τ.string, prim.any.toLocaleString       );
 //operators
-τ.any.equalTo              = annotate(τ.bool,   function(y) { return function(x){ return x === y; };              });
-τ.any.notEqualTo           = annotate(τ.bool,   function(y) { return function(x){ return x !== y; };              });
+τ.any.equalTo              = annotate(τ.bool,   prim.any.equalTo              );
+τ.any.notEqualTo           = annotate(τ.bool,   prim.any.notEqualTo           );
+τ.any.lessThan             = annotate(τ.bool,   prim.any.lessThan             );
+τ.any.greaterThan          = annotate(τ.bool,   prim.any.greaterThan          );
+τ.any.greaterThanOrEqualTo = annotate(τ.bool,   prim.any.greaterThanOrEqualTo );
+τ.any.lessThanOrEqualTo    = annotate(τ.bool,   prim.any.lessThanOrEqualTo    );
 
-//Array
-τ.array = function(τ1){
-  var array     = {};
-  
-  array.$length = annotate(τ.number, function(){ return function(a){ return a.length; }; });
-  array.map     = function(τ2){
-    return λ(τ.array(τ2))(function(f){ return function(a){ return a.map(f); }; });
-  };
-  array.reduce  = function(τ2){
-    return λ(τ2)(function(f, z){ return function(a){ return a.reduce(f,z); };  });
-  };
 
-  return array;
-};
-
-//Arrow (function)
-τ.arrow = function(τ1){
-  var arrow = {};
-  return arrow;
-};
-
-//Boolean
-τ.bool.toString            = τ.any.toString;
-τ.bool.toLocaleString      = τ.any.toLocaleString;
+//-----------------------------------------------------------------------------
+// Array
+//-----------------------------------------------------------------------------
+//methods
+τ.array.concat               = annotate(τ.array,  prim.array.concat           );
+τ.array.every                = annotate(τ.bool,   prim.array.every            );
+τ.array.filter               = annotate(τ.array,  prim.array.filter           );
+τ.array.forEach              = annotate(τ.any,    prim.array.forEach          );
+τ.array.indexOf              = annotate(τ.number, prim.array.indexOf          );
+τ.array.join                 = annotate(τ.string, prim.array.join             );
+τ.array.lastIndexOf          = annotate(τ.number, prim.array.lastIndexOf      );
+τ.array.$length              = annotate(τ.number, prim.array.$length          );
+τ.array.map                  = annotate(τ.array,  prim.array.map              );
+τ.array.pop                  = annotate(τ.any,    prim.array.pop              );
+τ.array.push                 = annotate(τ.array,  prim.array.push             );
+τ.array.reduce               = annotate(τ.any,    prim.array.reduce           );
+τ.array.reduceRight          = annotate(τ.any,    prim.array.reduceRight      );
+τ.array.reverse              = annotate(τ.array,  prim.array.reverse          );
+τ.array.shift                = annotate(τ.any,    prim.array.shift            );
+τ.array.slice                = annotate(τ.array,  prim.array.slice            );
+τ.array.some                 = annotate(τ.bool,   prim.array.some             );
+τ.array.sort                 = annotate(τ.array,  prim.array.sort             );
+τ.array.splice               = annotate(τ.array,  prim.array.splice           );
+τ.array.unshift              = annotate(τ.array,  prim.array.unshift          );
+τ.array.toLocaleString       = τ.any.toLocaleString;
+τ.array.toString             = τ.any.toString;
 //operators
-τ.bool.not                 = annotate(τ.bool,   function() { return function(x){ return !x;   }; });
-τ.bool.or                  = annotate(τ.bool,   function(x){ return function(y){ return x||y; }; });
-τ.bool.and                 = annotate(τ.bool,   function(x){ return function(y){ return x&&y; }; });
+τ.array.equalTo              = τ.any.equalTo;
+τ.array.notEqualTo           = τ.any.notEqualTo;
+τ.array.lessThan             = τ.any.lessThan;
+τ.array.greaterThan          = τ.any.greaterThan;
+τ.array.greaterThanOrEqualTo = τ.any.greaterThanOrEqualTo;
+τ.array.lessThanOrEqualTo    = τ.any.lessThanOrEqualTo;
 
-//Number
-τ.number.toExponential     = annotate(τ.number, function(d){ return function(x){ return x.toExponential(d); };    });
-τ.number.toFixed           = annotate(τ.number, function(d){ return function(x){ return x.toFixed(d); };          });
-τ.number.toPrecision       = annotate(τ.number, function(d){ return function(x){ return x.toPrecision(d); };      });
-τ.number.toLocaleString    = τ.any.toLocaleString;
-τ.number.toString          = τ.any.toString;
+
+//-----------------------------------------------------------------------------
+// Boolean
+//-----------------------------------------------------------------------------
+//methods
+τ.bool.toLocaleString       = τ.any.toLocaleString;
+τ.bool.toString             = τ.any.toString;
 //operators
-τ.number.plus              = annotate(τ.number, function(y){ return function(x){ return x+y; };                   });
-τ.number.times             = annotate(τ.number, function(y){ return function(x){ return x*y; };                   });
-τ.number.minus             = annotate(τ.number, function(y){ return function(x){ return x-y; };                   });
-τ.number.div               = annotate(τ.number, function(y){ return function(x){ return x/y; };                   });
-τ.number.mod               = annotate(τ.number, function(y){ return function(x){ return x%y; };                   });
-τ.number.lessThan          = annotate(τ.bool,   function(y){ return function(x){ return x < y; };                 });
-τ.number.greaterThan       = annotate(τ.bool,   function(y){ return function(x){ return x > y; };                 });
-τ.number.greaterThanOrEqualTo = annotate(τ.bool, function(y){ return function(x){ return x >= y; };               });
-τ.number.lessThanOrEqualTo    = annotate(τ.bool, function(y){ return function(x){ return x <= y; };               });
-τ.number.equalTo           = τ.any.equalTo;
-τ.number.notEqualTo        = τ.any.notEqualTo;
+τ.bool.not                  = annotate(τ.bool, prim.bool.not );
+τ.bool.or                   = annotate(τ.bool, prim.bool.or  );
+τ.bool.and                  = annotate(τ.bool, prim.bool.and );
+τ.bool.equalTo              = τ.any.equalTo;
+τ.bool.notEqualTo           = τ.any.notEqualTo;
+τ.bool.lessThan             = τ.any.lessThan;
+τ.bool.greaterThan          = τ.any.greaterThan;
+τ.bool.greaterThanOrEqualTo = τ.any.greaterThanOrEqualTo;
+τ.bool.lessThanOrEqualTo    = τ.any.lessThanOrEqualTo;
 
-//String
-τ.string.charAt            = annotate(τ.string, function(n){ return function(s){ return s.charAt(n); };           });
-τ.string.charCodeAt        = annotate(τ.number, function(n){ return function(s){ return s.charCodeAt(n); };       });
-τ.string.concat            = annotate(τ.string, function(x){ return function(s){ return s.concat(x); };           });
-τ.string.indexOf           = annotate(τ.number, function(c){ return function(s){ return s.indexOf(c); };          });
-τ.string.lastIndexOf       = annotate(τ.number, function(c){ return function(s){ return s.lastIndexOf(c); };      });
-τ.string.$length           = annotate(τ.number, function(){ return function(s){ return s.length; };               });
-τ.string.localeCompare     = annotate(τ.number, function(x){ return function(s){ return s.localeCompare(x); };    });
-τ.string.match             = annotate(τ.array(τ.string),
-      function(re){ return function(s){ return s.match(re); };                      });
-τ.string.replace           = annotate(τ.string, function(re, f){ return function(s){ return s.replace(re, f); };  });
-τ.string.search            = annotate(τ.number, function(re){ return function(s){ return s.search(re); };         });
-τ.string.slice             = annotate(τ.string,
-      function(start, end){ return function(s){ return s.slice(start, end); };      });
-τ.string.split             = annotate(τ.array,
-      function(sep){ return function(s){ return s.split(sep); };                    });
-τ.string.substr            = annotate(τ.string,
-      function(start, len){ return function(s){ return s.substr(start, len); };     });
-τ.string.substring         = annotate(τ.string,
-      function(start, end){ return function(s){ return s.substring(start, end); };  });
-τ.string.toLocaleLowerCase = annotate(τ.string, function(){ return function(s){ return s.toLocaleLowerCase(); };  });
-τ.string.toLocaleUpperCase = annotate(τ.string, function(){ return function(s){ return s.toLocaleUpperCase(); };  });
-τ.string.toLowerCase       = annotate(τ.string, function(){ return function(s){ return s.toLowerCase(); };        });
-τ.string.toString          = annotate(τ.string, function(){ return function(s){ return s.toString(); };           });
-τ.string.toUpperCase       = annotate(τ.string, function(){ return function(s){ return s.toUpperCase(); };        });
-τ.string.trim              = annotate(τ.string, function(){ return function(s){ return s.trim(); };               });
-τ.string.toString          = τ.any.toString;
-τ.string.toLocaleString    = τ.any.toLocaleString;
-τ.string.equalTo           = τ.any.equalTo;
-τ.string.notEqualTo        = τ.any.notEqualTo;
+
+//-----------------------------------------------------------------------------
+// Number
+//-----------------------------------------------------------------------------
+//methods
+τ.number.toExponential        = annotate(τ.number, prim.number.toExponential  );
+τ.number.toFixed              = annotate(τ.number, prim.number.toFixed        );
+τ.number.toPrecision          = annotate(τ.number, prim.number.toPrecision    );
+τ.number.toLocaleString       = τ.any.toLocaleString;
+τ.number.toString             = τ.any.toString;
+//operators
+τ.number.plus                 = annotate(τ.number, prim.number.plus  );
+τ.number.minus                = annotate(τ.number, prim.number.minus );
+τ.number.times                = annotate(τ.number, prim.number.times );
+τ.number.div                  = annotate(τ.number, prim.number.div   );
+τ.number.mod                  = annotate(τ.number, prim.number.mod   );
+τ.number.equalTo              = τ.any.equalTo;
+τ.number.notEqualTo           = τ.any.notEqualTo;
+τ.number.lessThan             = τ.any.lessThan;
+τ.number.greaterThan          = τ.any.greaterThan;
+τ.number.greaterThanOrEqualTo = τ.any.greaterThanOrEqualTo;
+τ.number.lessThanOrEqualTo    = τ.any.lessThanOrEqualTo;
+
+
+//-----------------------------------------------------------------------------
+// String
+//-----------------------------------------------------------------------------
+//methods
+τ.string.charAt               = annotate(τ.string,  prim.string.charAt            );
+τ.string.charCodeAt           = annotate(τ.number,  prim.string.charCodeAt        );
+τ.string.concat               = annotate(τ.string,  prim.string.concat            );
+τ.string.indexOf              = annotate(τ.number,  prim.string.indexOf           );
+τ.string.lastIndexOf          = annotate(τ.number,  prim.string.lastIndexOf       );
+τ.string.$length              = annotate(τ.number,  prim.string.$length           );
+τ.string.localeCompare        = annotate(τ.number,  prim.string.localeCompare     );
+τ.string.match                = annotate(τ.array,   prim.string.match             );
+τ.string.replace              = annotate(τ.string,  prim.string.replace           );
+τ.string.search               = annotate(τ.number,  prim.string.search            );
+τ.string.slice                = annotate(τ.string,  prim.string.slice             );
+τ.string.split                = annotate(τ.array,   prim.string.split             );
+τ.string.substr               = annotate(τ.string,  prim.string.substr            );
+τ.string.substring            = annotate(τ.string,  prim.string.substring         );
+τ.string.toLocaleLowerCase    = annotate(τ.string,  prim.string.toLocaleLowerCase );
+τ.string.toLocaleUpperCase    = annotate(τ.string,  prim.string.toLocaleUpperCase );
+τ.string.toLowerCase          = annotate(τ.string,  prim.string.toLowerCase       );
+τ.string.toUpperCase          = annotate(τ.string,  prim.string.toUpperCase       );
+τ.string.trim                 = annotate(τ.string,  prim.string.trim              );
+τ.string.toLocaleString       = τ.any.toLocaleString;
+τ.string.toString             = τ.any.toString;
+//operators
+τ.string.equalTo              = τ.any.equalTo;
+τ.string.notEqualTo           = τ.any.notEqualTo;
+τ.string.lessThan             = τ.any.lessThan;
+τ.string.greaterThan          = τ.any.greaterThan;
+τ.string.greaterThanOrEqualTo = τ.any.greaterThanOrEqualTo;
+τ.string.lessThanOrEqualTo    = τ.any.lessThanOrEqualTo;
+
 
 ///////////////////////////////////////////////////////////////////////////////
 // TEST CASES
 ///////////////////////////////////////////////////////////////////////////////
 
-var f = λ(τ.number).plus(2).times(3);
-var g = λ(τ.number)(function(x){ return 2; }).plus(2).times(3);
+var f = λ(τ.number)
+  .plus(2)
+  .times(3);
+var g = λ(τ.number)
+  (function(x){ return 2; })
+  .plus(2)
+  .times(3);
 
 console.log(f(1));
 console.log(g(10));
+
+
+///////////////////////////////////////////////////////////////////////////////
+// EXPORTS
+///////////////////////////////////////////////////////////////////////////////
+if (typeof module != 'undefined'){
+  module.exports = {
+    λ: λ,
+    τ: τ
+  };
+}
