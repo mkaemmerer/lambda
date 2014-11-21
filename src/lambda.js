@@ -15,33 +15,25 @@ function id(x){ return x; }
 // MAGIC
 ///////////////////////////////////////////////////////////////////////////////
 function λ(τ){
-  var fix = function(f){ return _λ(τ)(f)(f); };
+  var fix = function(f){ return _λ(τ, f, f); };
 
-  return _λ(τ)(id)(fix);
+  return _λ(τ, id, fix);
 }
-function _λ(τ){
-  var extend = function(base, f, τ1){
-    var delegate = η(f);
-
-    for(var name in τ1){
-      delegate[name] = compose(base, τ1[name]);
-    }
-    return delegate;
-  };
+function _λ(τ, k, f){
   var compose = function(f, g){
     return function(x){
       var composite = function(y){
         return g(x)(f(y));
       };
-      return _λ(g.τ)(composite)(composite);
+      return _λ(g.τ, composite, composite);
     };
   };
 
-  return function(k){
-    return function(f){
-      return extend(k, f, τ);
-    };
-  };
+  var delegate = η(f);
+  for(var name in τ){
+    delegate[name] = compose(k, τ[name]);
+  }
+  return delegate;
 }
 
 var τ = {
@@ -50,7 +42,7 @@ var τ = {
   arrow:  {},
   bool:   {},
   number: {},
-  string: {},
+  string: {}
 };
 
 ///////////////////////////////////////////////////////////////////////////////
