@@ -11,15 +11,17 @@ function annotate(τ, f){
 
 //Magic
 function λ(τ){
-  return _λ(τ)(function(f){ return _λ(τ)(f); });
+  var id  = function(x){ return x; };
+  var fix = function(f){ return _λ(τ)(f)(f); };
+
+  return _λ(τ)(id)(fix);
 }
 function _λ(τ){
-  var extend = function(f, τ1){
+  var extend = function(base, f, τ1){
     var delegate = η(f);
-    delegate.τ   = f.τ;
 
     for(var name in τ1){
-      delegate[name] = compose(delegate, τ1[name]);
+      delegate[name] = compose(base, τ1[name]);
     }
     return delegate;
   };
@@ -28,36 +30,43 @@ function _λ(τ){
       var composite = function(y){
         return g(x)(f(y));
       };
-      return _λ(g.τ)(composite);
+      return _λ(g.τ)(composite)(composite);
     };
   };
 
-  return function(f){
-    return extend(f, τ);
+  return function(k){
+    return function(f){
+      return extend(k, f, τ);
+    };
   };
 }
 
 var τ = {
+  any:    {},
   bool:   {},
   number: {},
-  string: {}
+  string: {},
+  char:   {}
 };
 
 
 //Function definitions
+τ.any.toString             = annotate(τ.string, function() { return function(x){ return x.toString(); }; });
+
 τ.bool.not                 = annotate(τ.bool,   function() { return function(x){ return !x;   };         });
 τ.bool.or                  = annotate(τ.bool,   function(x){ return function(y){ return x||y; };         });
 τ.bool.and                 = annotate(τ.bool,   function(x){ return function(y){ return x&&y; };         });
-τ.bool.toString            = annotate(τ.string, function(){  return function(x){ return x.toString(); }; });
+τ.bool.toString            = τ.any.toString;
 
-τ.number.plus              = annotate(τ.number, function(x){ return function(y){ return x+y; }; });
-τ.number.times             = annotate(τ.number, function(x){ return function(y){ return x*y; }; });
-τ.number.minus             = annotate(τ.number, function(x){ return function(y){ return x-y; }; });
-τ.number.div               = annotate(τ.number, function(x){ return function(y){ return x/y; }; });
-τ.number.mod               = annotate(τ.number, function(x){ return function(y){ return x%y; }; });
+τ.number.plus              = annotate(τ.number, function(y){ return function(x){ return x+y; }; });
+τ.number.times             = annotate(τ.number, function(y){ return function(x){ return x*y; }; });
+τ.number.minus             = annotate(τ.number, function(y){ return function(x){ return x-y; }; });
+τ.number.div               = annotate(τ.number, function(y){ return function(x){ return x/y; }; });
+τ.number.mod               = annotate(τ.number, function(y){ return function(x){ return x%y; }; });
+τ.number.toString          = τ.any.toString;
 
-// τ.string.charAt            = annotate(τ.string, function(){});
-// τ.string.charCodeAt        = annotate(τ.string, function(){});
+τ.string.charAt            = annotate(τ.char,   function(n){ return function(s){ return s.charAt(n); };      });
+τ.string.charCodeAt        = annotate(τ.number, function(n){ return function(s){ return s.charCodeAt(n); };  });
 τ.string.concat            = annotate(τ.string, function(x){ return function(s){ return s.concat(x); };      });
 τ.string.indexOf           = annotate(τ.number, function(c){ return function(s){ return s.indexOf(c); };     });
 τ.string.lastIndexOf       = annotate(τ.number, function(c){ return function(s){ return s.lastIndexOf(c); }; });
@@ -79,14 +88,9 @@ var τ = {
 
 
 //TEST CASES
-var not1 = λ(τ.bool).not();
-var not2 = λ(τ.bool)(function(x){ return !x; });
-var id1  = λ(τ.bool).not().not();
-var id2  = λ(τ.bool)(function(x){ return !x; }).not();
-var id3  = λ(τ.bool)(function(x){ return x;  });
+var f = λ(τ.number).plus(2).times(3);
+var g = λ(τ.number)(function(x){ return 2; }).plus(2).times(3);
 
-console.log(not1(true) === false);
-console.log(not2(true) === false);
-console.log(id1(true)  === true);
-console.log(id2(true)  === true);
-console.log(id3(false)  === false);
+
+console.log(f(1));
+console.log(g(10));
