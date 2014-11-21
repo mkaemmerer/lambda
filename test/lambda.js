@@ -31,8 +31,11 @@ exports.lambda = {
     test.done();
   },
   'Composition': function(test){
-    var f = arithmetic_1.andThen(τ.number)(arithmetic_2);
-    test.strictEqual(f(3), 45);
+    var f = arithmetic_1
+      .andThen(τ.number)(arithmetic_2)
+      .plus(10);
+    
+    test.strictEqual(f(3), 55);
     test.done();
   }
 };

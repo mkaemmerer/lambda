@@ -79,18 +79,17 @@ var τ = {
 //-----------------------------------------------------------------------------
 // Any Type
 //-----------------------------------------------------------------------------
-var andThen = function(τ){
-  var continuation = function(k){
-    return function(f){
+var andThen = function(k){
+  var continuation = function(τ){
+    var c2 = function(f){
       return function(x){
-        console.log(x);
-        console.log(k instanceof Function);
-        console.log(f instanceof Function);
         return f(k(x));
       };
     };
+    c2.τ = τ;
+    return c2;
   };
-  continuation.τ = κ(τ);
+  continuation.τ = id;
   return continuation;
 };
 //methods
