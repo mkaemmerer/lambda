@@ -12,55 +12,66 @@ function κ(x){
   };
 }
 function η(f){
-  var ex = function(x){ return f(x); };
-  ex.f_name = 'eta: ' + f.f_name;
-  return ex;
+  return function(x){ return f(x); };
 }
-function after(f){
-  return function(k){
-    var continuation = function(x){
-      return f(k(x));
+function flip(f){
+  return function(x){
+    return function(y){
+      return f(y)(x);
     };
-    continuation.τ = f.τ;
-    return continuation;
   };
 }
-function flipCurry(f){
+function curry(f){
   return function(x){
     return function(y){
       return f(y,x);
     };
   };
 }
+function pipe(f){
+  return function(k){
+    return annotate(f.τ, function(x){
+      return f(k(x));
+    });
+  };
+}
 function annotate(τ, f){
   f.τ = τ;
   return f;
 }
+//TODO: figure out how to decompose this with combinators
 function withType(τ, f){
-  var def = annotate(τ, flipCurry(f));
-  return after(def);
+  return function(k){
+    return annotate(τ, function(y){
+      return function(x){
+        return f(k(x), y);
+      };
+    });
+  };
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 // MAGIC
 ///////////////////////////////////////////////////////////////////////////////
 function λ(τ){
-  var fix = function(f){ return _λ(τ, f, f); };
-  return _λ(τ, id, fix);
-}
-function _λ(τ, k, f){
-  var fix = function(g){
-    return function(x){
-      var g2 = g(x);
-      return _λ(g.τ(x), g2, g2);
-    };
-  };
-
-  var delegate = η(f);
-  for(var name in τ){
-    delegate[name] = fix(τ[name](k));
+  var fix  = function(f){ return _λ(τ, f); };
+  var base = _λ(τ, id);
+  for(var name in base){
+    fix[name] = base[name];
   }
-  return delegate;
+  return fix;
+}
+function _λ(τ, f){
+  var def = η(f);
+  for(var name in τ){
+    def[name] = fix(τ[name](f));
+  }
+  return def;
+}
+function fix(f){
+  return function(x){
+    return _λ(f.τ(x), f(x));
+  };
 }
 
 var τ = {
@@ -80,18 +91,16 @@ var τ = {
 // Any Type
 //-----------------------------------------------------------------------------
 var andThen = function(k){
-  var continuation = function(τ){
-    var c2 = function(f){
-      return function(x){
+  return annotate(id, function(τ){
+    return function(f){
+      var ap = function(x){
         return f(k(x));
       };
+      return λ(τ)(ap);
     };
-    c2.τ = τ;
-    return c2;
-  };
-  continuation.τ = id;
-  return continuation;
+  });
 };
+
 //methods
 τ.any.andThen              = andThen;
 
