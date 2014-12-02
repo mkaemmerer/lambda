@@ -16,6 +16,9 @@ var arithmetic_2 = λ(τ.number)
   .plus(4)
   .times(5);
 
+var polymorphic  = λ(τ.array)
+  .reduce(τ.number)(function(x,y){ return x+y; })(0)
+  .plus(10);
 
 //-----------------------------------------------------------------------------
 // Tests
@@ -36,6 +39,11 @@ exports.lambda = {
       .plus(6);
     
     test.strictEqual(f(3), 51);
+    test.done();
+  },
+  'Polymorphism': function(test){
+    var array = [1,2,3,4];
+    test.strictEqual(polymorphic(array), 20);
     test.done();
   }
 };

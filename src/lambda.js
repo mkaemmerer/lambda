@@ -130,8 +130,6 @@ var andThen = function(k){
 τ.array.map                  = withType(κ(τ.array),  prim.array.map              );
 τ.array.pop                  = withType(κ(τ.any),    prim.array.pop              );
 τ.array.push                 = withType(κ(τ.array),  prim.array.push             );
-τ.array.reduce               = withType(κ(τ.any),    prim.array.reduce           );
-τ.array.reduceRight          = withType(κ(τ.any),    prim.array.reduceRight      );
 τ.array.reverse              = withType(κ(τ.array),  prim.array.reverse          );
 τ.array.shift                = withType(κ(τ.any),    prim.array.shift            );
 τ.array.slice                = withType(κ(τ.array),  prim.array.slice            );
@@ -142,6 +140,31 @@ var andThen = function(k){
 τ.array.andThen              = τ.any.andThen;
 τ.array.toLocaleString       = τ.any.toLocaleString;
 τ.array.toString             = τ.any.toString;
+//polymorphic
+τ.array.reduce               = function(k){
+  return annotate(id, function(τ){
+    return function(f){
+      return function(z){
+        var reduce = function(x){
+          return prim.array.reduce(k(x), f, z);
+        };
+        return λ(τ)(reduce);
+      };
+    };
+  });
+};
+τ.array.reduceRight          = function(k){
+  return annotate(id, function(τ){
+    return function(f){
+      return function(z){
+        var reduceRight = function(x){
+          return prim.array.reduceRight(k(x), f, z);
+        };
+        return λ(τ)(reduceRight);
+      };
+    };
+  });
+};
 //operators
 τ.array.equalTo              = τ.any.equalTo;
 τ.array.notEqualTo           = τ.any.notEqualTo;
