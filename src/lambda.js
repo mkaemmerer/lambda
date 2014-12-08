@@ -20,18 +20,18 @@ function flip(f){
   };
 }
 function curry(f){
-  return function(x){
-    return function(y){
+  return annotate(κ(f.τ), function(x){
+    return annotate(f.τ, function(y){
       return f(y,x);
-    };
-  };
+    });
+  });
 }
 function pipe(f){
-  return function(k){
+  return annotate(κ(f.τ), function(k){
     return annotate(f.τ, function(x){
       return f(k(x));
     });
-  };
+  });
 }
 function annotate(τ, f){
   f.τ = τ;
@@ -253,9 +253,7 @@ var andThen = function(k){
 ///////////////////////////////////////////////////////////////////////////////
 // EXPORTS
 ///////////////////////////////////////////////////////////////////////////////
-if (typeof module != 'undefined'){
-  module.exports = {
-    λ: λ,
-    τ: τ
-  };
-}
+module.exports = {
+  λ: λ,
+  τ: τ
+};
